@@ -1,0 +1,1 @@
+curses, joc, simulador, història, cotxes, velocitat
