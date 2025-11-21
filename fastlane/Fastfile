@@ -282,7 +282,7 @@ desc "Upload metadata"
                 email_address: "solomiyak519@gmail.com"
               },
             reject_if_possible: false,
-            overwrite_screenshots: true,
+            overwrite_screenshots: false,
             run_precheck_before_submit: true,
             precheck_include_in_app_purchases: false,
             submit_for_review: false, #temporary
@@ -294,6 +294,7 @@ desc "Upload metadata"
     end
 
 end
+
 
 
 
