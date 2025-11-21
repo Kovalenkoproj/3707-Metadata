@@ -251,7 +251,7 @@ desc "Upload metadata"
             app_identifier:"#{ENV['IOS_BUNDLE_ID']}",
             submit_for_review: false,
             force: true,
-            screenshots_path: './screenshots',
+            #screenshots_path: './screenshots',
             metadata_path: "fastlane/metadata",
             #app_rating_config_path: "fastlane/metadata/ratings_config.json",
             skip_app_version_update: true,
@@ -298,6 +298,7 @@ desc "Upload metadata"
     end
 
 end
+
 
 
 
