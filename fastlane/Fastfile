@@ -167,50 +167,6 @@ desc "Upload metadata"
            key_content: ENV['APPSTORE_P8']
         )
 
-        # Verify that the screenshots directory exists
-        unless Dir.exist?("./screenshots")
-          UI.user_error!("Screenshots directory not found at /screenshots")
-        end
-        
-        # Scan all locales in the screenshots folder
-        locale_dirs = Dir.glob("./screenshots/*").select { |f| File.directory?(f) }
-        UI.success("Found #{locale_dirs.size} locale directories in screenshots folder")
-        
-        locale_dirs.each do |locale_dir|
-          locale = File.basename(locale_dir)
-          UI.message("Processing locale: #{locale}")
-          
-          # Check for iPhone folders in this locale
-          iphone_folders = Dir.glob("#{locale_dir}/iPhone*")
-          
-          if iphone_folders.empty?
-            UI.message("  - Warning: No iPhone screenshot folders found in #{locale}")
-          else
-            UI.message("  - Found #{iphone_folders.size} iPhone screenshot folders in #{locale}")
-          end
-          
-
-          # Count screenshots in each device folder
-          (iphone_folders).each do |device_folder|
-            screenshot_count = Dir.glob("#{device_folder}/*.{jpg,png}").size
-            device_name = File.basename(device_folder)
-            UI.message("    - Found #{screenshot_count} screenshots in #{device_name}")
-          end
-        end
-        
-        # Require en-US locale at minimum
-        unless Dir.exist?("./screenshots/en-US")
-          UI.user_error!("Required en-US locale directory is missing in screenshots")
-        end
-        
-        # Verify en-US has at least one iPhone folder
-        unless Dir.glob("./screenshots/en-US/iPhone*").any?
-          UI.user_error!("No iPhone screenshot folders found in en-US locale")
-        end
-
-        
-        UI.success("Screenshots validation successful!")
-        
         # Debug info for paths
         UI.message("Current directory: #{Dir.pwd}")
         
@@ -224,16 +180,6 @@ desc "Upload metadata"
           if Dir.exist?(path)
             metadata_path = path
             UI.success("Found metadata path: #{path}")
-            break
-          end
-        end
-        
-        # Find valid screenshots path
-        screenshots_path = nil
-        possible_screenshots_paths.each do |path|
-          if Dir.exist?(path)
-            screenshots_path = path
-            UI.success("Found screenshots path: #{path}")
             break
           end
         end
@@ -253,10 +199,7 @@ desc "Upload metadata"
           end
         end
         
-        if screenshots_path.nil?
-          UI.error("No valid screenshots path found! Tried: #{possible_screenshots_paths.join(', ')}")
-        end
-        
+      
         # Check iTunes Connect API key is set
         UI.message("APPSTORE_KEY_ID set: #{!ENV['APPSTORE_KEY_ID'].nil? && !ENV['APPSTORE_KEY_ID'].empty?}")
         UI.message("APPSTORE_ISSUER_ID set: #{!ENV['APPSTORE_ISSUER_ID'].nil? && !ENV['APPSTORE_ISSUER_ID'].empty?}")
@@ -303,18 +246,6 @@ desc "Upload metadata"
           else
             UI.error("Missing review_information directory in metadata path")
           end
-
-          # ...перед цим весь код валідації...
-          
-          UI.message("=== Uploading screenshots ===")
-
-          screenshots = Dir["./screenshots/**/*.{jpg,png}"]
-          if screenshots.empty?
-            UI.error("No screenshots found!")
-          else
-            screenshots.each { |s| UI.message("⬆️ Uploading: #{s}") }
-          end
-          #############################################################
           
           deliver(
             app_identifier:"#{ENV['IOS_BUNDLE_ID']}",
@@ -367,6 +298,7 @@ desc "Upload metadata"
     end
 
 end
+
 
 
 
