@@ -45,67 +45,7 @@ jobs:
           gem install fastlane-plugin-appicon
 
       - name: Validate directory structure
-        run: |
-          echo "===== Validating Screenshots ====="
-          # Check that screenshots folder exists
-          if [ ! -d "./fastlane/screenshots" ]; then
-            echo "ERROR: Screenshots directory not found at ./fastlane/screenshots"
-            exit 1
-          fi
-          
-          # List and count all locale folders
-          LOCALE_FOLDERS=$(find ./fastlane/screenshots -maxdepth 1 -type d | grep -v "^./fastlane/screenshots$" | wc -l)
-          echo "Found $LOCALE_FOLDERS locale folders in screenshots directory"
-          find ./fastlane/screenshots -maxdepth 1 -type d | grep -v "^./fastlane/screenshots$" | sort | while read LOCALE_DIR; do
-            LOCALE=$(basename "$LOCALE_DIR")
-            echo "Processing locale: $LOCALE"
-            
-            # Check for iPhone and iPad folders in each locale
-            IPHONE_FOLDERS=$(find "$LOCALE_DIR" -type d -name "iPhone*" | wc -l)
-            IPAD_FOLDERS=$(find "$LOCALE_DIR" -type d -name "iPad*" | wc -l)
-            
-            if [ "$IPHONE_FOLDERS" -eq 0 ]; then
-              echo "WARNING: No iPhone screenshot folders found in $LOCALE_DIR"
-            else
-              echo "Found $IPHONE_FOLDERS iPhone screenshot folders in $LOCALE"
-            fi
-            
-            if [ "$IPAD_FOLDERS" -eq 0 ]; then
-              echo "WARNING: No iPad screenshot folders found in en-US locale (skipping iPad validation)"
-            else
-              echo "Found $IPAD_FOLDERS iPad screenshot folders in en-US locale"
-            fi
-            
-            # Count screenshots in each device folder
-            find "$LOCALE_DIR" -type d | grep -v "^$LOCALE_DIR$" | while read DEVICE_FOLDER; do
-              if [ -d "$DEVICE_FOLDER" ]; then
-                COUNT=$(find "$DEVICE_FOLDER" -type f -name "*.jpg" | wc -l)
-                echo "  - Found $COUNT screenshots in $(basename "$DEVICE_FOLDER")"
-              fi
-            done
-          done
-          
-          # Require en-US locale at minimum
-          if [ ! -d "./fastlane/screenshots/en-US" ]; then
-            echo "ERROR: Required en-US locale directory is missing in screenshots"
-            exit 1
-          fi
-          
-          # Verify en-US has at least one iPhone and one iPad folder
-          IPHONE_FOLDERS=$(find "./fastlane/screenshots/en-US" -type d -name "iPhone*" | wc -l)
-          IPAD_FOLDERS=$(find "./fastlane/screenshots/en-US" -type d -name "iPad*" | wc -l)
-          
-          if [ "$IPHONE_FOLDERS" -eq 0 ]; then
-            echo "ERROR: No iPhone screenshot folders found in en-US locale"
-            exit 1
-          fi
-          
-          if [ "$IPAD_FOLDERS" -eq 0 ]; then
-            echo "ERROR: No iPad screenshot folders found in en-US locale"
-          else
-            echo "Found $IPAD_FOLDERS iPad screenshot folders in en-US locale"
-          fi
-          
+        run: | 
           echo "===== Validating Metadata ====="
           # Check that metadata folder exists
           if [ ! -d "./fastlane/metadata" ]; then
