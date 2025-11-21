@@ -172,7 +172,7 @@ desc "Upload metadata"
         
         # Try different potential paths for metadata and screenshots
         possible_metadata_paths = ['metadata', './metadata', '../metadata', './fastlane/metadata', '../fastlane/metadata']
-        possible_screenshots_paths = ['screenshots', './screenshots', '../screenshots', './fastlane/screenshots', '../fastlane/screenshots']
+        #possible_screenshots_paths = ['screenshots', './screenshots', '../screenshots', './fastlane/screenshots', '../fastlane/screenshots']
         
         # Find valid metadata path
         metadata_path = nil
@@ -207,14 +207,10 @@ desc "Upload metadata"
         UI.message("Bundle ID: #{ENV['IOS_BUNDLE_ID']}")
 
         # Use discovered paths in deliver or provide clear error
-        if metadata_path.nil? && screenshots_path.nil?
-          UI.user_error!("Cannot find metadata and screenshots paths. Aborting.")
-        elsif metadata_path.nil?
+        if metadata_path.nil?
           UI.user_error!("Cannot find metadata path. Aborting.")
-        elsif screenshots_path.nil?
-          UI.user_error!("Cannot find screenshots path. Aborting.")
         else
-          UI.success("Using metadata_path: #{metadata_path} and screenshots_path: #{screenshots_path}")
+          UI.success("Using metadata_path: #{metadata_path}")
           
           # Verify review information files
           review_info_path = File.join(metadata_path, 'review_information')
@@ -298,6 +294,7 @@ desc "Upload metadata"
     end
 
 end
+
 
 
 
