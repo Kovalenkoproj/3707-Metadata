@@ -1,1 +1,1 @@
-curses, joc, simulador, història, cotxes, velocitat
+drag, joc, cursa, campanya, joc de rol

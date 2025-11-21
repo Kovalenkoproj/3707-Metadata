@@ -1,1 +1,1 @@
-carreras, juego, simulador, historia, coches, velocidad
+arrastrar, juego, carrera, campaña, juego de rol
