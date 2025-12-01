@@ -9,6 +9,7 @@ workflows:
       groups:
         - appstore-connect
         - match
+        - ios
       vars:
         IOS_BUNDLE_ID: com.solkovalproj.app
         APP_NAME: Highway Story
