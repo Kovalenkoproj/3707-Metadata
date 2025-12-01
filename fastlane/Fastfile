@@ -1,165 +1,17 @@
 platform :ios do
   #######################################################
-  #  Sync certificates via match (для білдів / TestFlight)
-  #######################################################
-  desc "Sync codesigning certificates"
-  lane :sync_certificates do
-    app_store_connect_api_key(
-      key_id: ENV["APPSTORE_KEY_ID"],
-      issuer_id: ENV["APPSTORE_ISSUER_ID"],
-      key_content: ENV["APPSTORE_P8"]
-    )
-
-    main_app_bundle_id = ENV["IOS_BUNDLE_ID"]
-
-    match(
-      type: "appstore",
-      storage_mode: "git",
-      git_url: ENV["MATCH_REPOSITORY"], # Напр.: git@github.com:org/match-repo.git
-      app_identifier: [main_app_bundle_id],
-      readonly: false
-    )
-  end
-
-  #######################################################
-  #  Release в App Store (якщо захочеш юзати потім)
-  #######################################################
-  desc "Deliver a new Release build to the App Store"
-  lane :release do
-    build
-    deliver
-    upload_to_app_store(
-      submit_for_review: false,
-      automatic_release: false,
-      force: true,
-      skip_screenshots: true,
-      run_precheck_before_submit: false
-    )
-  end
-
-  #######################################################
-  #  Beta в TestFlight
-  #######################################################
-  desc "Deliver a new Beta build to Apple TestFlight"
-  lane :beta do
-    # Missing Export Compliance can also be set through Deliverfile
-    update_info_plist(
-      xcodeproj: "#{ENV['IOS_BUILD_PATH']}/iOS/Unity-iPhone.xcodeproj",
-      plist_path: "Info.plist",
-      block: proc do |plist|
-        plist["ITSAppUsesNonExemptEncryption"] = false
-      end
-    )
-
-    # Update iOS Deployment Target
-    update_info_plist(
-      xcodeproj: "#{ENV['IOS_BUILD_PATH']}/iOS/Unity-iPhone.xcodeproj",
-      plist_path: "Info.plist",
-      block: proc do |plist|
-        plist["MinimumOSVersion"] = "11.0"
-        plist["NSLocationWhenInUseUsageDescription"] = "Allow access to location for app usage"
-      end
-    )
-
-    build
-    upload_to_testflight(skip_waiting_for_build_processing: true)
-  end
-
-  #######################################################
-  #  Сервісні lane'и
-  #######################################################
-  desc "List Provisioning Profiles"
-  lane :list_profiles do
-    sh "security find-identity -v -p codesigning"
-  end
-
-  desc "Install cocoapods"
-  lane :install_pods do
-    cocoapods(
-      clean: true,
-      use_bundle_exec: false,
-      repo_update: true,
-      podfile: "#{ENV['IOS_BUILD_PATH']}/iOS/Podfile"
-    )
-  end
-
-  #######################################################
-  #  Build (Unity → Xcode → .ipa)
-  #######################################################
-  desc "Create .ipa"
-  lane :build do
-    setup_ci
-    sync_certificates
-    list_profiles
-
-    # Unity has specific requirements around codesigning that we have to handle
-    # See https://github.com/fastlane/fastlane/discussions/17458 for context
-
-    # Автоматичний signing для Unity-iPhone (спочатку)
-    update_code_signing_settings(
-      use_automatic_signing: true,
-      path: "#{ENV['IOS_BUILD_PATH']}/iOS/Unity-iPhone.xcodeproj"
-    )
-
-    # Потім ручний signing для основної таргети
-    update_code_signing_settings(
-      use_automatic_signing: false,
-      team_id: ENV["sigh_#{ENV['IOS_BUNDLE_ID']}_appstore_team-id"],
-      code_sign_identity: "iPhone Distribution",
-      targets: "Unity-iPhone",
-      path: "#{ENV['IOS_BUILD_PATH']}/iOS/Unity-iPhone.xcodeproj",
-      profile_name: ENV["sigh_#{ENV['IOS_BUNDLE_ID']}_appstore_profile-name"],
-      profile_uuid: ENV["sigh_#{ENV['IOS_BUNDLE_ID']}_appstore"]
-    )
-
-    # Update version & build number
-    version_number = ENV["APP_VERSION"] || "1.0.0"
-    increment_version_number(
-      version_number: version_number,
-      xcodeproj: "#{ENV['IOS_BUILD_PATH']}/iOS/Unity-iPhone.xcodeproj"
-    )
-
-    increment_build_number(
-      build_number: latest_testflight_build_number(
-        version: version_number,
-        app_identifier: ENV["IOS_BUNDLE_ID"]
-      ) + 1,
-      xcodeproj: "#{ENV['IOS_BUILD_PATH']}/iOS/Unity-iPhone.xcodeproj"
-    )
-
-    # Якщо будеш юзати Pods — розкоментуй:
-    # install_pods
-
-    build_app( # alias: gym
-      # workspace: "#{ENV['IOS_BUILD_PATH']}/iOS/Unity-iPhone.xcworkspace",
-      project: "#{ENV['IOS_BUILD_PATH']}/iOS/Unity-iPhone.xcodeproj",
-      scheme: "Unity-iPhone",
-      xcargs: "-allowProvisioningUpdates",
-      export_options: {
-        method: "app-store",
-        uploadBitcode: false,
-        compileBitcode: false
-      }
-    )
-  end
-
-  #######################################################
   #  Upload metadata (Codemagic → App Store Connect)
   #######################################################
   desc "Upload metadata"
   lane :upload_metadata do
-    # НІЯКОГО setup_ci / sync_certificates тут не потрібно
-
     app_store_connect_api_key(
       key_id: ENV["APPSTORE_KEY_ID"],
       issuer_id: ENV["APPSTORE_ISSUER_ID"],
       key_content: ENV["APPSTORE_P8"]
     )
 
-    # Debug info for paths
     UI.message("Current directory: #{Dir.pwd}")
 
-    # Try different potential paths for metadata
     possible_metadata_paths = [
       "metadata",
       "./metadata",
@@ -190,13 +42,12 @@ platform :ios do
       end
     end
 
-    # Check App Store Connect API key envs
     UI.message("APPSTORE_KEY_ID set: #{!ENV['APPSTORE_KEY_ID'].to_s.empty?}")
     UI.message("APPSTORE_ISSUER_ID set: #{!ENV['APPSTORE_ISSUER_ID'].to_s.empty?}")
     UI.message("APPSTORE_P8 set: #{!ENV['APPSTORE_P8'].to_s.empty?}")
     UI.message("Bundle ID: #{ENV['IOS_BUNDLE_ID']}")
 
-    # Review information
+    # review_information (опційно, але хай буде)
     review_info_path = File.join(metadata_path, "review_information")
     if Dir.exist?(review_info_path)
       required_files = %w[first_name.txt last_name.txt email_address.txt phone_number.txt]
@@ -220,7 +71,6 @@ platform :ios do
       UI.error("Missing review_information directory in metadata path")
     end
 
-    # Основний виклик deliver для метаданих
     deliver(
       app_identifier: ENV["IOS_BUNDLE_ID"],
       submit_for_review: false,
