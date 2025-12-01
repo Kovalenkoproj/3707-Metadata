@@ -9,7 +9,6 @@ workflows:
       groups:
         # тут мають лежати APPSTORE_ISSUER_ID, APPSTORE_KEY_ID, APPSTORE_P8, APPLE_EMAIL
         - appstore-connect
-        - ios
       vars:
         IOS_BUNDLE_ID: com.solkovalproj.app
         APP_NAME: Highway Story
@@ -94,10 +93,11 @@ workflows:
     artifacts:
       - fastlane/logs/**/*
 
-    publishing:
-      email:
-        recipients:
-          - $APPLE_EMAIL
-        notify:
-          success: true
-          failure: true
+    #це потрібно, щоб отримувати сповіщення по пошту
+    #publishing:
+    #  email:
+    #    recipients:
+    #      - $APPLE_EMAIL
+    #    notify:
+    #      success: true
+    #      failure: true
