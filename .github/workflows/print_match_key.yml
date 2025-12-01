@@ -1,0 +1,14 @@
+name: Print MATCH_DEPLOY_KEY
+
+on:
+  workflow_dispatch:
+
+jobs:
+  print:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print deploy key
+        run: |
+          echo "${MATCH_DEPLOY_KEY}"
+        env:
+          MATCH_DEPLOY_KEY: ${{ secrets.MATCH_DEPLOY_KEY }}
